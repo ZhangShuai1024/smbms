@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="cn.smbms.dao.user.UserMapper">
+ 
+ 	<resultMap type="User" id="userList">
+ 		<id property="id" column="id"/>
+ 		<result property="userCode" column="userCode"/>
+ 		<result property="userName" column="userName"/>
+ 		<result property="phone" column="phone"/>
+ 		<result property="birthday" column="birthday"/>
+ 		<result property="gender" column="gender"/>
+ 		<result property="userRole" column="userRole"/>
+ 		<result property="userRoleName" column="roleName"/>
+ 	</resultMap>
+ 	<resultMap type="User" id="userRoleResult">
+ 		<id property="id" column="id"/>
+ 		<result property="userCode" column="userCode"/>
+ 		<result property="userName" column="userName"/>
+ 		<result property="phone" column="phone"/>
+ 		<result property="birthday" column="birthday"/>
+ 		<result property="gender" column="gender"/>
+ 		<result property="userRole" column="userRole"/>
+ 		<result property="userRoleName" column="roleName"/>
+ 		<association property="role" javaType="Role" resultMap="roleResult"/>
+ 	</resultMap>
+ 	<resultMap type="Role" id="roleResult">
+ 		<id property="id" column="r_id"/>
+	 	<result property="roleCode" column="roleCode"/>
+	 	<result property="roleName" column="roleName"/>
+ 	</resultMap>
+ 	<resultMap type="User" id="userAddressResult">
+ 		<id property="id" column="id"/>
+ 		<result property="userCode" column="userCode"/>
+ 		<result property="userName" column="userName"/>
+ 		<collection property="addressList" ofType="Address" resultMap="addressResult" />
+ 	</resultMap>
+ 	<resultMap  type="Address" id="addressResult">
+ 		<id property="id" column="a_id"/>
+	 	<result property="postCode" column="postCode"/>
+	 	<result property="tel" column="tel"/>
+	 	<result property="contact" column="contact"/>
+	 	<result property="addressDesc" column="addressDesc"/>
+ 	</resultMap>
+ 	<resultMap type="User" id="userMapByRole">
+ 		<id property="id" column="id"/>
+ 		<result property="userCode" column="userCode"/>
+ 		<result property="userName" column="userName"/>
+ 	</resultMap>
+ 	<!-- 查询用户表的记录数  -->
+ 	<select id="getUserCount" resultType="Integer">
+ 		select count(1) as count from smbms_user
+ 	</select>
+ 	<!-- 查询用户列表 -->
+ 	<select id="getUserList" resultMap="userRoleResult">
+ 		select u.*,r.id as r_id,r.roleCode,r.roleName
+ 		 from smbms_user u,smbms_role r
+ 			where u.userRole = r.id
+ 	</select>
+ 	<!-- 查询用户列表 （分页显示）-->
+ 	<select id="getUserList_page" resultMap="userList">
+ 		select u.*,r.roleName from smbms_user u,smbms_role r
+ 			where u.userRole = r.id
+ 			<if test="userRole != null">
+ 				and u.userRole = #{userRole}
+ 			</if>
+ 			<if test="userName != null and userName != ''">
+ 				and u.userName like CONCAT('%',#{userName},'%')
+ 			</if>
+ 			order by creationDate DESC limit #{from},#{pageSize}
+ 	</select> 
+ 	<!-- 查询用户列表 -->
+ 	<select id="getUserList_choose" resultType="User">
+ 		select * from smbms_user where 1=1
+ 			<choose>
+ 				<when test="userName != null and userName !=''">
+ 					and userName like CONCAT('%',#{userName},'%')
+ 				</when>
+ 				<when test="userCode != null and userCode !=''">
+ 					and userCode like CONCAT('%',#{userCode},'%')
+ 				</when>
+ 				<when test="userRole != null">
+ 					and userRole = #{userRole}
+ 				</when>
+ 				<otherwise>
+ 					and YEAR(creationDate) = YEAR(#{creationDate})
+ 				</otherwise>
+ 			</choose>
+ 	</select> 
+ 	<!-- 根据id查询用户列表 -->
+ 	<select id="getUserById" resultMap="userRoleResult" parameterType="Integer">
+ 		select u.*,r.id as r_id,r.roleCode,r.roleName
+ 		 from smbms_user u,smbms_role r
+ 			where u.userRole = r.id and u.id=#{id}
+ 	</select> 
+ 	<!-- 查询用户列表通过页面 -->
+ 	<select id="getUserListByPage" resultMap="userRoleResult">
+ 		select u.*,r.id as r_id,r.roleCode,r.roleName
+ 		 from smbms_user u,smbms_role r
+ 			where u.userRole = r.id LIMIT #{pageIndex}, #{pageSize}
+ 	</select>
+ 	<select id="getUserList1" resultMap="userList" parameterType="User">
+ 		select u.*,r.roleName from smbms_user u,smbms_role r
+ 			where u.userName like CONCAT('%',#{userName},'%')
+ 				and u.userRole = #{userRole} and u.userRole = r.id
+ 	</select>
+ 	<!-- 查询用户是否存在 -->
+ 	<select id="isExistUser" parameterType="User" resultType="Integer">
+ 		SELECT COUNT(1) FROM smbms_user WHERE userCode = #{userCode} AND userPassword = #{userPassword}
+ 	</select>
+ 	<!-- 查询用户编码是否存在 -->
+ 	<select id="isExistUserCode" parameterType="String" resultType="Integer">
+ 		SELECT COUNT(1) FROM smbms_user WHERE userCode = #{userCode} 
+ 	</select>
+ 	<!-- 根据用户编码查询用户 -->
+ 	<select id="getUserByUserCode" parameterType="String" resultType="User">
+ 		SELECT * FROM smbms_user WHERE userCode = #{userCode} 
+ 	</select>
+ 	<!-- 根据用户名称查询用户列表（模糊查询） -->
+ 	<select id="getUserListByUserName" resultMap="userRoleResult" parameterType="string">
+ 		select u.*,r.id as r_id,r.roleCode,r.roleName
+ 		 from smbms_user u,smbms_role r
+ 			where u.userRole = r.id and userName like CONCAT('%',#{userName},'%')
+ 	</select>
+ 	<!-- 根据用户查询用户列表（模糊查询） -->
+ 	<select id="getUserListByUser" resultType="User" parameterType="User">
+ 		select * from smbms_user 
+ 			where userName like CONCAT('%',#{userName},'%')
+ 				and userRole = #{userRole}
+ 	</select>
+ 	<select id="getUserListByMap" resultMap="userRoleResult" parameterType="Map">
+ 		select u.*,r.id as r_id,r.roleCode,r.roleName
+ 		 from smbms_user u,smbms_role r
+ 			where u.userRole = r.id and userName like CONCAT('%',#{uName},'%')
+ 				and userRole = #{uRole}
+ 	</select>
+ 	<!-- 增加用户 -->
+ 	<insert id ="add" parameterType="User">
+ 		insert into smbms_user (userCode,userName,userPassword,gender,birthday,
+ 								phone,address,userRole,createdBy,creationDate)
+ 			values(#{userCode},#{userName},#{userPassword},#{gender},#{birthday},
+ 								#{phone},#{address},#{userRole},#{createdBy},#{creationDate})
+ 	</insert>
+ 	<!-- 修改用户 -->
+ 	<update id = "modify" parameterType="User">
+ 		update smbms_user set userName=#{userName},gender=#{gender},
+ 					phone=#{phone},address=#{address},
+ 					userRole=#{userRole},modifyBy=#{modifyBy},
+ 					modifyDate=#{modifyDate},birthday=#{birthday}
+ 			where id=#{id}
+ 	</update>
+ 	<!-- 修改当前用户密码 -->
+ 	<update id = "updatePwd" >
+ 		update smbms_user set userPassword=#{userPassword} where id=#{id}
+ 	</update>
+ 	<!-- 根据userId删除用户信息 -->
+ 	<delete id="deleteUserById" parameterType="Integer">
+ 		delete from smbms_user where id=#{id}
+ 	</delete>
+ 	<!-- 根据角色id获取角色列表 -->
+ 	<select id="getUserListByRoleId" resultMap="userRoleResult" parameterType="Integer">
+ 		select u.*,r.id as r_id,r.roleCode,r.roleName
+ 		 from smbms_user u,smbms_role r
+ 			where u.userRole = #{userRole} and u.userRole = r.id
+ 	</select>
+ 	<!-- 根据用户角色列表，获取该角色列表下用户列表信息-foreach_array -->
+ 	<select id="getUserByRoleId_foreach_array" resultMap="userMapByRole">
+ 		select * from smbms_user where userRole in
+ 			<foreach collection="array" item="roleIds" open = "(" separator="," close=")">
+ 				#{roleIds}
+ 			</foreach>
+ 	</select>
+ 	<!-- 根据用户角色列表，获取该角色列表下用户列表信息-foreach_list -->
+ 	<select id="getUserByRoleId_foreach_list" resultMap="userMapByRole">
+ 		select * from smbms_user where userRole in
+ 			<foreach collection="list" item="roleList" open = "(" separator="," close=")">
+ 				#{roleList}
+ 			</foreach>
+ 	</select>
+ 	<!-- 根据用户角色列表，获取该角色列表下用户列表信息-foreach_map -->
+ 	<select id="getUserByRoleId_foreach_map" resultMap="userMapByRole">
+ 		select * from smbms_user where userRole in
+ 			<foreach collection="rKey" item="roleMap" open = "(" separator="," close=")">
+ 				#{roleMap}
+ 			</foreach>
+ 	</select>
+ 	<!-- 获取指定用户的相关信息和地址列表 -->
+ 	<select id="getAddressListByUserId" parameterType="Integer" resultMap="userAddressResult">
+	 	select u.*,a.id as a_id,a.contact,a.addressDesc,a.postCode,a.tel
+	 		 <!-- from smbms_user u,smbms_address a
+	 			where u.id = a.userId and u.id = #{id} -->
+	 		from smbms_user u LEFT JOIN smbms_address a ON u.id=a.userId
+	 			where u.id = #{id}
+ 	</select>
+ 	<!-- 根据用户角色列表和性别（多参数），获取该角色列表下指定性别的用户列表信息-foreach_map -->
+ 	<select id="getUserByCoditionMap_foreach_map" resultMap="userMapByRole">
+ 		select * from smbms_user where gender=#{gender} and userRole in
+ 			<foreach collection="roleIds" item="roleMap" open="(" separator="," close=")">
+ 				#{roleMap}
+ 			</foreach>
+ 	</select>
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ </mapper>

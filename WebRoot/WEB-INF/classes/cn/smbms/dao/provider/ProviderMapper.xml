@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="cn.smbms.dao.provider.ProviderMapper">
+ 
+ 	<resultMap type="Provider" id="providerList">
+ 		<id property="id" column="id"/>
+ 		<result property="proCode" column="proCode"/>
+ 		<result property="proName" column="proName"/>
+ 		<result property="proDesc" column="proDesc"/>
+ 		<result property="proContact" column="proContact"/>
+ 		<result property="proPhone" column="proPhone"/>
+ 		<result property="proAddress" column="proAddress"/>
+ 		<result property="proFax" column="proFax"/>
+ 		<collection property="billList" ofType="Bill" resultMap="billList"/>
+ 	</resultMap>
+ 	<resultMap type="Bill" id="billList">
+ 		<id property="id" column="b_id"/>
+ 		<result property="billCode" column="billCode"/>
+ 		<result property="productName" column="productName"/>
+ 		<result property="totalPrice" column="totalPrice"/>
+ 		<result property="isPayment" column="isPayment"/>
+ 	</resultMap>
+ 	<select id="getProviderList" resultType="Provider">
+ 		select * from smbms_provider
+ 	</select>
+ 	<!-- 根据供应商名查询列表 -->
+ 	<select id="getProviderListByProName" resultMap="providerList">
+ 		select p.*,b.* from smbms_provider p ,smbms_bill b
+ 		<trim prefix="where" prefixOverrides="and|or" suffix=" and p.id = b.providerId">
+ 			<if test="proCode != null and proCode !='' ">
+ 				and proCode like CONCAt('%',#{proCode},'%')
+ 			</if>
+ 			<if test="proName != null and proName !='' ">
+ 				and proName like CONCAt('%',#{proName},'%')
+ 			</if>
+ 		</trim>
+ 	</select>
+ 	<!-- 修改供应商信息 -->
+ 	<update id="modify" parameterType="Provider">
+ 		update smbms_provider
+ 		<trim prefix="set" suffixOverrides="," suffix="where id = #{id}">
+ 			<if test="proCode != null">proCode = #{proCode},</if>
+ 			<if test="proName != null">proName = #{proName},</if>
+ 			<if test="proDesc != null">proDesc = #{proDesc},</if>
+ 			<if test="proContact != null">proContact = #{proContact},</if>
+ 			<if test="proPhone != null">proPhone = #{proPhone},</if>
+ 			<if test="proAddress != null">proAddress = #{proAddress},</if>
+ 			<if test="modifyBy != null">modifyBy = #{modifyBy},</if>
+ 			<if test="modifyDate != null">modifyDate = #{modifyDate},</if>
+ 			<if test="proFax != null">proFax = #{proFax},</if>
+ 		</trim>
+ 	</update>
+ 	<select id="getProviderCount" resultType="Integer">
+ 		select count(1) as count from smbms_provider
+ 	</select>
+ 	<!-- 根据id查询供应商 -->
+ 	<select id="getProviderById" parameterType="Integer" resultMap="providerList">
+ 		select p.*,b.id as b_id  from smbms_provider p LEFT JOIN smbms_bill b on p.id=b.providerId where p.id=#{id} 
+ 	</select>
+ 	<!-- 增加供应商 -->
+ 	<insert id ="addProvider" parameterType="Provider">
+ 		insert into smbms_provider (proCode,proName,proDesc,proContact,proPhone,
+ 								proAddress,proFax,createdBy,creationDate)
+ 			values(#{proCode},#{proName},#{proDesc},#{proContact},#{proPhone},
+ 								#{proAddress},#{proFax},#{createdBy},#{creationDate})
+ 	</insert>
+ 	<!-- 修改供应商 -->
+ 	<update id = "modifyProvider" parameterType="Provider">
+ 		update smbms_provider
+ 		<trim prefix="set" suffixOverrides="," suffix="where id = #{id}">
+ 			<if test="proCode != null">proCode = #{proCode},</if>
+ 			<if test="proName != null">proName = #{proName},</if>
+ 			<if test="proDesc != null">proDesc = #{proDesc},</if>
+ 			<if test="proContact != null">proContact = #{proContact},</if>
+ 			<if test="proPhone != null">proPhone = #{proPhone},</if>
+ 			<if test="proAddress != null">proAddress = #{proAddress},</if>
+ 			<if test="modifyBy != null">modifyBy = #{modifyBy},</if>
+ 			<if test="modifyDate != null">modifyDate = #{modifyDate},</if>
+ 			<if test="proFax != null">proFax = #{proFax},</if>
+ 		</trim>
+ 	</update>
+ 	<!-- 根据删除供应商信息 -->
+ 	<delete id="deleteProviderById" parameterType="Integer">
+ 		delete from smbms_provider where id=#{id}
+ 	</delete>
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ </mapper>
